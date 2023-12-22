@@ -11,7 +11,13 @@ fn insert_commas(integer: &str) -> String {
         .collect::<String>()
         .chars()
         .enumerate()
-        .map(|(i, c)| if i % 3 == 0 && i != 0 { format!(",{}", c) } else { c.to_string() })
+        .map(|(i, c)| {
+            if i % 3 == 0 && i != 0 {
+                format!(",{}", c)
+            } else {
+                c.to_string()
+            }
+        })
         .collect();
     rev_int.chars().rev().collect()
 }
