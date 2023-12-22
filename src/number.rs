@@ -8,8 +8,6 @@ fn insert_commas(integer: &str) -> String {
     let rev_int: String = integer
         .chars()
         .rev()
-        .collect::<String>()
-        .chars()
         .enumerate()
         .map(|(i, c)| {
             if i % 3 == 0 && i != 0 {

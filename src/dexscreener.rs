@@ -140,11 +140,11 @@ pub async fn query(pair_address: &str, simple: &bool) {
                             .clone()
                             .unwrap_or(constants::NONE_STR.to_string())
                     ]);
+                    table.add_row(row!["Token Address", &first_pair.base_token.address]);
 
                     if !simple {
                         table.add_row(row!["Chain", &first_pair.chain_id]);
                         table.add_row(row!["DEX", &first_pair.dex_id]);
-                        table.add_row(row!["Token Address", &first_pair.base_token.address]);
                         table.add_row(row![
                             "24h Volume",
                             &format!(
