@@ -1,10 +1,13 @@
+#![allow(dead_code)]
 mod command;
+mod config;
 mod constants;
 mod dexscreener;
 mod number;
 
 #[tokio::main]
 async fn main() {
+    let _ = config::Config::load();
     let matches = command::tt_command().get_matches();
     match matches.subcommand() {
         Some(("list", sub_matches)) => {

@@ -1,4 +1,5 @@
-use crate::{constants, number};
+use crate::config::PairConfig;
+use crate::{config, constants, number};
 use prettytable::{row, Cell, Row, Table};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -110,15 +111,23 @@ async fn query_pair(chain_id: &str, pair_address: &str) -> Result<Vec<Pair>, Box
         )))
     }
 }
-pub async fn query(pair_address: &str, simple: &bool) {
-    let pair_result = search_token(pair_address).await;
-    let search_pair: Option<Pair> = match pair_result {
-        Ok(pairs) => pairs.get(0).cloned(),
-        Err(e) => {
-            println!("Error: {}", e);
-            None
-        }
-    };
+pub async fn query(search: &str, simple: &bool) {
+    let search_pair: Option<PairConfig>;
+    let mut config = config::Config::load();
+
+    if let Some(token) = config.search_token(search) {
+        search_pair = Option::from(token);
+    } else {
+        let pair_result = search_token(search).await;
+        search_pair = match pair_result {
+            Ok(pairs) => pairs.get(0).cloned().map(|value| PairConfig::from(value)),
+            Err(e) => {
+                println!("Error: {}", e);
+                None
+            }
+        };
+    }
+
     if let Some(pair) = search_pair {
         let query_result = query_pair(pair.chain_id.as_str(), pair.pair_address.as_str()).await;
         match query_result {
@@ -179,6 +188,8 @@ pub async fn query(pair_address: &str, simple: &bool) {
                         table.add_row(row!["Pair Address", &first_pair.pair_address]);
                         table.add_row(row!["Link", &first_pair.url]);
                     }
+
+                    config.append_token(PairConfig::from(first_pair.clone()));
                 } else {
                     println!("No pairs found.");
                 }
