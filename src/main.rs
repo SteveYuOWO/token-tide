@@ -7,7 +7,6 @@ mod number;
 
 #[tokio::main]
 async fn main() {
-    let _ = config::Config::load();
     let matches = command::tt_command().get_matches();
     match matches.subcommand() {
         Some(("list", sub_matches)) => {
@@ -20,6 +19,10 @@ async fn main() {
             let token = sub_matches.get_one::<String>("TOKEN").expect("required");
             println!("Searching {} ...", token.to_uppercase());
             dexscreener::query(token, &simple).await
+        }
+        Some(("add", sub_matches)) => {
+            let address = sub_matches.get_one::<String>("ADDRESS").expect("required");
+            dexscreener::add(address).await;
         }
         _ => unreachable!(),
     }

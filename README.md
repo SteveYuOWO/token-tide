@@ -95,5 +95,20 @@ Searching HONEY ...
 ...
 ```
 
+4. Add specify pair address
 
+After using the list to find the required token, specify the pair address.
 
+```
+tt add <token_address/pair_address>
+```
+
+Example: 
+
+```bash
+# Input
+tt add DSyu4Sc5TyWDATZQaiZSMg4KTauwbsXpHb4Z1dU3i5wR
+# Output
+Deleted HONEY. Before pair: 2RVVkjA9cRHzZgpLiS1s5eRudqF8ZD3kguCGoU1vhjPo
+Appended HONEY. Now pair: DSyu4Sc5TyWDATZQaiZSMg4KTauwbsXpHb4Z1dU3i5wR
+```

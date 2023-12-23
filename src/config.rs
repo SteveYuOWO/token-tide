@@ -10,7 +10,7 @@ pub struct PairConfig {
     pub chain_id: String,
     pub base_token_symbol: String,
     pub quote_token_symbol: String,
-    pub address: String,
+    pub base_token_address: String,
     pub pair_address: String,
 }
 
@@ -20,7 +20,7 @@ impl PairConfig {
             chain_id: pair.chain_id,
             base_token_symbol: pair.base_token.symbol,
             quote_token_symbol: pair.quote_token.symbol,
-            address: pair.base_token.address,
+            base_token_address: pair.base_token.address,
             pair_address: pair.pair_address,
         }
     }
@@ -40,21 +40,32 @@ impl Config {
         self.pairs
             .iter()
             .find(|value| {
-                value.quote_token_symbol == pair.quote_token_symbol
-                    && value.pair_address == pair.pair_address
-                    && value.address == pair.address
-                    && value.base_token_symbol == pair.base_token_symbol
+                value.quote_token_symbol.to_uppercase() == pair.quote_token_symbol.to_uppercase()
+                    && value.pair_address.to_uppercase() == pair.pair_address.to_uppercase()
+                    && value.base_token_address.to_uppercase()
+                        == pair.base_token_address.to_uppercase()
+                    && value.base_token_symbol.to_uppercase()
+                        == pair.base_token_symbol.to_uppercase()
             })
             .is_some()
+    }
+    pub fn delete_if_exist(&mut self, token_symbol: &str) -> Option<PairConfig> {
+        let idx = self.pairs.iter().position(|value| {
+            value.base_token_symbol.to_uppercase() == token_symbol.to_uppercase()
+        });
+        match idx {
+            Some(idx) => Option::from(self.pairs.remove(idx)),
+            None => None,
+        }
     }
     pub fn search_token(&mut self, search: &str) -> Option<PairConfig> {
         self.pairs
             .iter()
             .find(|value| {
-                value.address == search
-                    || value.pair_address == search
-                    || value.base_token_symbol == search
-                    || value.quote_token_symbol == search
+                value.base_token_address.to_uppercase() == search.to_uppercase()
+                    || value.pair_address.to_uppercase() == search.to_uppercase()
+                    || value.base_token_symbol.to_uppercase() == search.to_uppercase()
+                    || value.quote_token_symbol.to_uppercase() == search.to_uppercase()
             })
             .cloned()
     }
@@ -127,7 +138,7 @@ mod tests {
             chain_id: "solana".to_string(),
             base_token_symbol: "TEST".to_string(),
             quote_token_symbol: "USDT".to_string(),
-            address: "test_address".to_string(),
+            base_token_address: "test_address".to_string(),
             pair_address: "test_pair_address".to_string(),
         };
 
@@ -135,7 +146,7 @@ mod tests {
         assert_eq!(config.pairs.len(), 1);
         assert_eq!(config.pairs[0].base_token_symbol, "TEST");
         assert_eq!(config.pairs[0].quote_token_symbol, "USDT");
-        assert_eq!(config.pairs[0].address, "test_address");
+        assert_eq!(config.pairs[0].base_token_address, "test_address");
         assert_eq!(config.pairs[0].pair_address, "test_pair_address");
 
         config.clear();
@@ -150,7 +161,7 @@ mod tests {
             chain_id: "solana".to_string(),
             base_token_symbol: "TEST".to_string(),
             quote_token_symbol: "USDT".to_string(),
-            address: "test_address".to_string(),
+            base_token_address: "test_address".to_string(),
             pair_address: "test_pair_address".to_string(),
         };
 
@@ -158,7 +169,7 @@ mod tests {
             chain_id: "solana".to_string(),
             base_token_symbol: "TEST2".to_string(),
             quote_token_symbol: "USDT".to_string(),
-            address: "test_address2".to_string(),
+            base_token_address: "test_address2".to_string(),
             pair_address: "test_pair_address2".to_string(),
         };
 
@@ -180,7 +191,7 @@ mod tests {
             chain_id: "solana".to_string(),
             base_token_symbol: "TEST".to_string(),
             quote_token_symbol: "USDT".to_string(),
-            address: "test_address".to_string(),
+            base_token_address: "test_address".to_string(),
             pair_address: "test_pair_address".to_string(),
         };
 
@@ -190,7 +201,7 @@ mod tests {
         assert_eq!(config.pairs.len(), 1);
         assert_eq!(config.pairs[0].base_token_symbol, "TEST");
         assert_eq!(config.pairs[0].quote_token_symbol, "USDT");
-        assert_eq!(config.pairs[0].address, "test_address");
+        assert_eq!(config.pairs[0].base_token_address, "test_address");
         assert_eq!(config.pairs[0].pair_address, "test_pair_address");
 
         config.clear();
@@ -205,7 +216,7 @@ mod tests {
             chain_id: "solana".to_string(),
             base_token_symbol: "HONEY".to_string(),
             quote_token_symbol: "USDT".to_string(),
-            address: "4vMsoUT2BWatFweudnQM1xedRLfJgJ7hswhcpz4xgBTy".to_string(),
+            base_token_address: "4vMsoUT2BWatFweudnQM1xedRLfJgJ7hswhcpz4xgBTy".to_string(),
             pair_address: "2RVVkjA9cRHzZgpLiS1s5eRudqF8ZD3kguCGoU1vhjPo".to_string(),
         };
         assert_eq!(config.search_token("HO").is_some(), false);
@@ -226,6 +237,7 @@ mod tests {
         config.append_token(token);
         assert_eq!(config.search_token("HO").is_some(), false);
         assert_eq!(config.search_token("HONEY").is_some(), true);
+        assert_eq!(config.search_token("honey").is_some(), true);
         assert_eq!(config.search_token("USDT").is_some(), true);
         assert_eq!(
             config
@@ -239,5 +251,23 @@ mod tests {
                 .is_some(),
             true
         );
+    }
+
+    #[test]
+    fn delete_if_exist() {
+        let mut config = Config::load();
+        config.clear();
+        assert_eq!(config.delete_if_exist("HONEY").is_some(), false);
+        let token = PairConfig {
+            chain_id: "solana".to_string(),
+            base_token_symbol: "HONEY".to_string(),
+            quote_token_symbol: "USDT".to_string(),
+            base_token_address: "4vMsoUT2BWatFweudnQM1xedRLfJgJ7hswhcpz4xgBTy".to_string(),
+            pair_address: "2RVVkjA9cRHzZgpLiS1s5eRudqF8ZD3kguCGoU1vhjPo".to_string(),
+        };
+        config.append_token(token);
+        assert_eq!(config.pairs.len(), 1);
+        assert_eq!(config.delete_if_exist("HONEY").is_some(), true);
+        assert_eq!(config.pairs.len(), 0);
     }
 }

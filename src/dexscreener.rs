@@ -229,3 +229,40 @@ pub async fn search(token: &str) {
         Err(e) => println!("Error: {}", e),
     }
 }
+
+pub async fn add(search: &str) {
+    let mut config = config::Config::load();
+    let pair_result = search_token(search).await;
+    let search_pair = match pair_result {
+        Ok(pairs) => pairs.get(0).cloned().map(|value| PairConfig::from(value)),
+        Err(e) => {
+            println!("Error: {}", e);
+            None
+        }
+    };
+    if let Some(pair) = search_pair {
+        let before_pair: Option<PairConfig> = config.delete_if_exist(&pair.base_token_symbol);
+        if let Some(before) = before_pair {
+            println!(
+                "Deleted {}. Before pair: {}",
+                before.base_token_symbol, before.pair_address
+            );
+        } else {
+            println!("No pair found before.");
+        }
+
+        let query_result = query_pair(pair.chain_id.as_str(), pair.pair_address.as_str()).await;
+        match query_result {
+            Ok(pairs) => {
+                if let Some(first_pair) = pairs.get(0) {
+                    config.append_token(PairConfig::from(first_pair.clone()));
+                    println!(
+                        "Appended {}. Now pair: {}",
+                        pair.base_token_symbol, pair.pair_address
+                    );
+                }
+            }
+            Err(e) => println!("Error: {}", e),
+        }
+    }
+}

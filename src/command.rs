@@ -12,9 +12,12 @@ pub fn tt_command() -> Command {
         )
         .subcommand(
             Command::new("query")
-                .about("Query token info")
-                .arg(arg!(<TOKEN> "Token symbol or address"))
+                .arg(arg!(<TOKEN> "Query token info"))
                 .arg(arg!(--simple "Query token price by symbol or address"))
                 .arg_required_else_help(true),
+        )
+        .subcommand(
+            Command::new("add")
+                .arg(arg!(<ADDRESS> "Priority query address(When searching for related tokens)")),
         )
 }
